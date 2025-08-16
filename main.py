@@ -11,7 +11,7 @@ def main():
         level = logging.INFO,
     )
     load_dotenv()
-    token = os.getenv('BOT_TOKEN')
+    token = os.environ["DISCORD_TOKEN"]
     if not token:
         raise RuntimeError(
             "Bot token not found"
