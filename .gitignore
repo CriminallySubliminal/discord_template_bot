@@ -1,2 +1,6 @@
 .env
 
+bot_settings.json
+
+__pycache__/
+*.pyc 
