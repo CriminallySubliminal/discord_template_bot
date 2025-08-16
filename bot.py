@@ -7,13 +7,13 @@ import re
 import json
 import os
 
-# Bot token from Discord Developer Portal
 
 
-# Settings file to store server configurations
+
+
 SETTINGS_FILE = "bot_settings.json"
 
-#Server admin roles that can use bot cofig commands
+
 ADMIN_ROLE_IDS = []
 
 def load_settings():
@@ -28,17 +28,17 @@ def save_settings(settings):
     with open(SETTINGS_FILE, 'w') as f:
         json.dump(settings, f, indent=2)
 
-# Load settings on startup
+
 bot_settings = load_settings()
 
-# Bot setup with intents
+
 intents = discord.Intents.default()
-intents.message_content = True  # Required to read message content
+intents.message_content = True  
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 class TemplateBot:
     def __init__(self):
-        # Define your custom templates here
+        
         self.templates = {
             "cashout": """
 🔔 **CASHOUT**
@@ -58,17 +58,17 @@ class TemplateBot:
             """
         }
         
-        # Define the expected field order for each template
+        
         self.template_fields = {
             "cashout": ["playerName","loadedAmount","cashtag","redeemedAmount","tip","gameLoad","payAmount",]
         }
 
     def parse_mention_message(self, text, bot_user_id):
         """Parse a message that mentions the bot and extract template data"""
-        # Remove the bot mention
+        
         text = re.sub(f'<@!?{bot_user_id}>', '', text).strip()
         
-        # Look for template type (first word after mention)
+        
         parts = text.split('\n', 1)
         if not parts:
             return None, None
@@ -79,13 +79,13 @@ class TemplateBot:
         if template_name not in self.templates:
             return None, None
         
-        # Parse the rest of the message for values (no keys needed)
+        
         data = {}
         if len(parts) > 1:
             content = parts[1].strip()
             values = [line.strip() for line in content.split('\n') if line.strip()]
             
-            # Map values to template fields in order
+            
             template_fields = self.template_fields.get(template_name, [])
             for i, value in enumerate(values):
                 if i < len(template_fields):
@@ -97,16 +97,16 @@ class TemplateBot:
         """Fill template with provided data"""
         template = self.templates[template_name]
         
-        # Get all placeholders in the template
+        
         placeholders = re.findall(r'\{(\w+)\}', template)
         
-        # Fill with provided data or leave empty
+        
         filled_data = {}
         for placeholder in placeholders:
             if placeholder in data and data[placeholder]:
                 filled_data[placeholder] = data[placeholder]
             elif placeholder == "role_mention" and guild_id:
-                # Get auto role mention for this server
+                
                 server_settings = bot_settings.get(str(guild_id), {})
                 role_id = server_settings.get("notify_role_id")
                 if role_id:
@@ -114,7 +114,7 @@ class TemplateBot:
                 else:
                     filled_data[placeholder] = ""
             else:
-                # Leave empty instead of showing placeholders
+                
                 filled_data[placeholder] = ""
         
         try:
@@ -152,14 +152,14 @@ Fields are filled in order - no need to specify field names!
 
 **Admin Commands:**
 • `/set_notify_role @RoleName` - Set role to mention automatically
-• `/set_command_channel #channel` - Set where users can use commands
-• `/set_response_channel #channel` - Set where templates are posted
+• `/set_command_channel 
+• `/set_response_channel 
 • `/remove_notify_role` - Remove automatic role mention  
 • `/bot_settings` - View current settings
         """
         return help_msg
 
-# Initialize the template bot
+
 template_bot = TemplateBot()
 
 @bot.event
@@ -168,12 +168,12 @@ async def on_ready():
     print(f'{bot.user} has connected to Discord!')
     print(f'Bot is ready to use in {len(bot.guilds)} servers')
     
-    # Sync slash commands (force refresh)
+    
     try:
         synced = await bot.tree.sync()
         print(f"Synced {len(synced)} slash command(s)")
         
-        # List the synced commands
+        
         for command in synced:
             print(f"  - /{command.name}")
             
@@ -243,7 +243,7 @@ async def on_message(message):
     
     await bot.process_commands(message)
     
-    # ===============================
+    
 
 
 def parse_tip_game(s: str):
@@ -259,13 +259,13 @@ def parse_tip_game(s: str):
     s = (s or "").strip()
     if not s:
         return 0, 0
-    # Try comma format first
+    
     if "," in s:
         parts = [p.strip() for p in s.split(",", 1)]
         tip = int(''.join(ch for ch in parts[0] if ch.isdigit() or ch=='-') or "0")
         game = int(''.join(ch for ch in parts[1] if ch.isdigit() or ch=='-') or "0")
         return tip, game
-    # Try key=value or spaced format
+    
     s_low = s.lower().replace("=", " ").replace("tip", " ").replace("game", " ")
     nums = [int(''.join(ch for ch in tok if ch.isdigit() or ch=='-') or "0")
             for tok in s_low.split() if any(c.isdigit() for c in tok)]
@@ -275,7 +275,7 @@ def parse_tip_game(s: str):
 
 
 
-#Cashout form on command
+
 class CashoutModal(ui.Modal, title="Cashout Details"):
     def __init__(self, template_bot, bot_settings, guild):
         super().__init__()
@@ -341,15 +341,15 @@ class CashoutModal(ui.Modal, title="Cashout Details"):
             "payAmount": str(pay_amount),
         }
 
-        # Use your existing templating (plain text output, no embed)
+        
         text_block = self.template_bot.fill_template("cashout", data, self.guild.id)
 
-        # Post to configured response channel if set; else reply here
+        
         response_channel_id = server_settings.get("response_channel_id")
         if response_channel_id:
             channel = self.guild.get_channel(response_channel_id)
             if channel:
-                # Optional: role ping if configured
+                
                 notify_role_id = server_settings.get("notify_role_id")
                 if notify_role_id:
                     await channel.send(f"<@&{notify_role_id}>")
@@ -359,7 +359,7 @@ class CashoutModal(ui.Modal, title="Cashout Details"):
                 )
                 return
 
-        # Fallback: same channel
+        
         notify_role_id = server_settings.get("notify_role_id")
         if notify_role_id:
             await interaction.channel.send(f"<@&{notify_role_id}>")
@@ -370,12 +370,12 @@ class CashoutModal(ui.Modal, title="Cashout Details"):
 
 
 
-# ADMIN COMMANDS FOR SETTINGS
-# ===============================
 
-# ===============================
-# ADMIN COMMANDS (Slash /commands)
-# ===============================
+
+
+
+
+
 
 def is_bot_admin(member: discord.Member):
     """Check if a member is allowed to run bot admin commands"""
@@ -394,7 +394,7 @@ def is_bot_admin(member: discord.Member):
 
 
 
-# --- Set Admin Roles ---
+
 @bot.tree.command(name="set_admin_roles", description="Set which roles are allowed to use bot admin commands")
 @app_commands.describe(
     role1="First admin role",
@@ -411,7 +411,7 @@ async def set_admin_roles(
     role4: discord.Role = None,
     role5: discord.Role = None
 ):
-    # Only server admins can set admin roles
+    
     if not interaction.user.guild_permissions.administrator:
         await interaction.response.send_message(
             "❌ You need **Administrator** permissions to set admin roles.",
@@ -431,7 +431,7 @@ async def set_admin_roles(
     )
 
 
-# --- Set Notify Role ---
+
 @bot.tree.command(name="set_notify_role", description="Set the role to mention for cashout notifications")
 @app_commands.describe(role="Role to mention in cashout messages")
 async def set_notify_role(interaction: discord.Interaction, role: discord.Role):
@@ -461,7 +461,7 @@ async def set_notify_role(interaction: discord.Interaction, role: discord.Role):
     )
 
 
-# --- Remove Notify Role ---
+
 @bot.tree.command(name="remove_notify_role", description="Remove the automatic role mention from cashout messages")
 async def remove_notify_role(interaction: discord.Interaction):
 
@@ -489,7 +489,7 @@ async def remove_notify_role(interaction: discord.Interaction):
         )
 
 
-# --- Set Command Channel ---
+
 @bot.tree.command(name="set_command_channel", description="Set the channel where bot listens for commands")
 @app_commands.describe(channel="Channel for commands")
 async def set_command_channel(interaction: discord.Interaction, channel: discord.TextChannel):
@@ -511,7 +511,7 @@ async def set_command_channel(interaction: discord.Interaction, channel: discord
     )
 
 
-# --- Set Response Channel ---
+
 @bot.tree.command(name="set_response_channel", description="Set the channel where cashout templates are posted")
 @app_commands.describe(channel="Channel for cashout templates")
 async def set_response_channel(interaction: discord.Interaction, channel: discord.TextChannel):
@@ -532,7 +532,7 @@ async def set_response_channel(interaction: discord.Interaction, channel: discor
         ephemeral=True
     )
 
-#View BOT SETTINGS
+
 @bot.tree.command(name="bot_settings", description="View current bot settings for this server")
 async def view_settings(interaction: discord.Interaction):
     
@@ -548,7 +548,7 @@ async def view_settings(interaction: discord.Interaction):
     guild_id = str(interaction.guild.id)
     server_settings = bot_settings.get(guild_id, {})
 
-    # Admin roles
+    
     admin_role_ids = server_settings.get("admin_role_ids", [])
     if admin_role_ids:
         admin_roles_text = ", ".join(
@@ -582,9 +582,9 @@ async def view_settings(interaction: discord.Interaction):
 
 
 
-# ===============================
-# SLASH COMMANDS (Modern /commands)
-# ===============================
+
+
+
 
 @bot.tree.command(name="cashout", description="Open a form to generate a cashout template")
 async def slash_cashout(interaction: discord.Interaction):
@@ -617,9 +617,9 @@ async def slash_templates(interaction: discord.Interaction):
     message = f"**Available Templates:**\n{templates_list}\n\nUse `/cashout` to create a cashout template!"
     await interaction.response.send_message(message, ephemeral=True)
 
-# ===============================
-# PREFIX COMMANDS (Legacy !commands) 
-# ===============================
+
+
+
 
 
 
@@ -629,12 +629,12 @@ async def help_command(ctx):
     help_message = template_bot.get_help_message()
     await ctx.send(help_message)
 
-# Error handling
+
 @bot.event
 async def on_command_error(ctx, error):
     """Handle command errors"""
     if isinstance(error, commands.CommandNotFound):
-        return  # Ignore unknown commands
+        return  
     
     print(f"An error occurred: {error}")
     await ctx.send("An error occurred while processing your request.")
