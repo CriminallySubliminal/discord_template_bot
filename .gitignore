@@ -1,6 +1,41 @@
+# --- Environment & secrets ---
 .env
-
 bot_settings.json
 
+# --- Python cache & compiled files ---
 __pycache__/
-*.pyc 
+*.pyc
+*.pyo
+*.pyd
+*.pyc.*
+*.pyo.*
+*.pyd.*
+
+# --- Build & distribution folders ---
+build/
+dist/
+*.egg-info/
+
+# --- Virtual environments ---
+venv/
+env/
+.venv/
+.env/
+pip-wheel-metadata/
+pythonenv/
+
+# --- IDE/editor settings ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# --- Logs & debug files ---
+*.log
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+
+# --- Misc ---
+*.sqlite3
